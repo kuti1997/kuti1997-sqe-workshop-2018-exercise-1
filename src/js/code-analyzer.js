@@ -4,7 +4,7 @@ import * as escodegen from 'escodegen';
 
 //Type Handlers
 const varHandler = (code) =>{
-    return {'Line': code['loc']['start']['line'], 'Type': code['type'], 'Name' : code['name']};
+    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Name' : code['name']}];
 };
 
 const declarationHandler = (code) =>{
@@ -13,7 +13,7 @@ const declarationHandler = (code) =>{
     {
         value = escodegen.generate(code['init']);
     }
-    return {'Line': code['id']['loc']['start']['line'], 'Type': code['type'], 'Name' : code['id']['name'], 'Value': value};
+    return [{'Line': code['id']['loc']['start']['line'], 'Type': code['type'], 'Name' : code['id']['name'], 'Value': value}];
 };
 
 const assHandler = (code) =>{
@@ -22,7 +22,7 @@ const assHandler = (code) =>{
     {
         value =  escodegen.generate(code['right']);
     }
-    return {'Line': code['loc']['start']['line'], 'Type': code['type'], 'Name' : code['left']['name'], 'Value': value};
+    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Name' : code['left']['name'], 'Value': value}];
 };
 
 const ifHandler = (code) =>{
@@ -31,11 +31,18 @@ const ifHandler = (code) =>{
     {
         cond = escodegen.generate(code['test']);
     }
-    return {'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond};
+    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond}].concat(recursiveHandle(code['consequent']))
+        .concat(recursiveHandle(code['alternate']));
 };
 
 const funDecHandler = (code) =>{
-    return {'Line': code['id']['loc']['start']['line'], 'Type': code['type'], 'Name' : code['id']['name']};
+    let toReturn = [];
+    for(let i=0;i<code['params'].length;i++)
+    {
+        toReturn = toReturn.concat(varHandler(code['params'][i]));
+    }
+    toReturn = toReturn.concat(recursiveHandle(code['body']));
+    return [{'Line': code['id']['loc']['start']['line'], 'Type': code['type'], 'Name' : code['id']['name']}].concat(toReturn);
 };
 
 const returnHandler = (code) =>{
@@ -44,7 +51,7 @@ const returnHandler = (code) =>{
     {
         value = escodegen.generate(code['argument']);
     }
-    return {'Line': code['loc']['start']['line'], 'Type': code['type'], 'Value': value};
+    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Value': value}];
 };
 
 const whileHandler = (code) =>{
@@ -53,16 +60,25 @@ const whileHandler = (code) =>{
     {
         cond = escodegen.generate(code['test']);
     }
-    return {'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond};
+    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond}].concat(recursiveHandle(code['body']));
 };
 
 const forHandler = (code) =>{
     let cond = null;
+    let toReturn = [];
     if(code['test'] !== null)
     {
         cond = escodegen.generate(code['test']);
     }
-    return {'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond};
+    if(code['init'] !== null)
+    {
+        toReturn = toReturn.concat(callTypeFunction(code['init']));
+    }
+    if(code['update'] !== null)
+    {
+        toReturn = toReturn.concat(callTypeFunction(code['update']));
+    }
+    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond}].concat(toReturn).concat(recursiveHandle(code['consequent']));
 };
 //End of Type Handlers
 
@@ -81,15 +97,7 @@ const callTypeFunction = (code)=>{
     let func = TypeToHandler[code['type']];
     if(func !== undefined)
     {
-        toReturn.push(func.call(undefined, code));
-        if(code['type'] === 'FunctionDeclaration')
-        {
-            func = TypeToHandler['Identifier'];
-            for(let x = 0; x < code['params'].length; x++)
-            {
-                toReturn.push(func.call(undefined, code['params'][x]));
-            }
-        }
+        toReturn = toReturn.concat(func.call(undefined, code));
     }
     return toReturn;
 };
@@ -102,9 +110,12 @@ const handleMap = (code) =>{
         {
             toReturn = toReturn.concat(callTypeFunction(code));
         }
-        for(let x in code)
+        if(!TypeToHandler.hasOwnProperty(code['type']))
         {
-            toReturn = toReturn.concat(recursiveHandle(code[x]));
+            for(let x in code)
+            {
+                toReturn = toReturn.concat(recursiveHandle(code[x]));
+            }
         }
     }
     return toReturn;

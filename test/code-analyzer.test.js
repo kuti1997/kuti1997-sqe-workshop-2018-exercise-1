@@ -9,8 +9,7 @@ let declaration1 = parseCode('let x = y + 6;')['body'][0]['declarations'][0];
 
 let ass1 = parseCode('x = y + 6;')['body'][0]['expression'];
 
-let if1 = parseCode('if(x > 9)\n' +
-    'y = 8;')['body'][0];
+let if1 = parseCode('if(x > 9){}')['body'][0];
 
 let funDec1 = parseCode('function myFunc(a,b,c){};')['body'][0];
 
@@ -21,9 +20,7 @@ let return1 = parseCode('function myFunc(a,b,c){\n' +
 let while1 = parseCode('while(x > y[6]){\n' +
     '}')['body'][0];
 
-let for1 = parseCode('for(i=0;i<=5;i=i++){\n' +
-    'x=x+i;\n' +
-    '}')['body'][0];
+let for1 = parseCode('for(i=0;i<=5;i++){\n' + '}')['body'][0];
 
 let callFunType1 = parseCode('function func(a){\n' +
     'let x = 5 + 8;\n' +
@@ -35,9 +32,6 @@ let recursiveHandler1 = parseCode('function func(a){\n' +
     'return 0;\n' +
     '}\n' +
     'return 1;\n' +
-    '}');
-
-let htmlInput = parseCode('function func(){\n' +
     '}');
 
 let htmlOutput ='<table border="1"><tr><td>Line</td><td>Type</td><td>Name</td><td>Condition</td><td>Value</td></tr>' +
@@ -67,49 +61,49 @@ describe('The javascript parser', () => {
     it('is handling identifier correctly', () => {
         assert.equal(
             JSON.stringify(varHandler(identifier1)),
-            '{"Line":1,"Type":"Identifier","Name":"X"}'
+            '[{"Line":1,"Type":"Identifier","Name":"X"}]'
         );
     });
     it('is handling declaration correctly', () => {
         assert.equal(
             JSON.stringify(declarationHandler(declaration1)),
-            '{"Line":1,"Type":"VariableDeclarator","Name":"x","Value":"y + 6"}'
+            '[{"Line":1,"Type":"VariableDeclarator","Name":"x","Value":"y + 6"}]'
         );
     });
     it('is handling assignment correctly', () => {
         assert.equal(
             JSON.stringify(assHandler(ass1)),
-            '{"Line":1,"Type":"AssignmentExpression","Name":"x","Value":"y + 6"}'
+            '[{"Line":1,"Type":"AssignmentExpression","Name":"x","Value":"y + 6"}]'
         );
     });
     it('is handling if correctly', () => {
         assert.equal(
             JSON.stringify(ifHandler(if1)),
-            '{"Line":1,"Type":"IfStatement","Condition":"x > 9"}'
+            '[{"Line":1,"Type":"IfStatement","Condition":"x > 9"}]'
         );
     });
     it('is handling function declaration correctly', () => {
         assert.equal(
             JSON.stringify(funDecHandler(funDec1)),
-            '{"Line":1,"Type":"FunctionDeclaration","Name":"myFunc"}'
+            '[{"Line":1,"Type":"FunctionDeclaration","Name":"myFunc"},{"Line":1,"Type":"Identifier","Name":"a"},{"Line":1,"Type":"Identifier","Name":"b"},{"Line":1,"Type":"Identifier","Name":"c"}]'
         );
     });
     it('is handling return statement correctly', () => {
         assert.equal(
             JSON.stringify(returnHandler(return1)),
-            '{"Line":2,"Type":"ReturnStatement","Value":"x + 8"}'
+            '[{"Line":2,"Type":"ReturnStatement","Value":"x + 8"}]'
         );
     });
     it('is handling while loop correctly', () => {
         assert.equal(
             JSON.stringify(whileHandler(while1)),
-            '{"Line":1,"Type":"WhileStatement","Condition":"x > y[6]"}'
+            '[{"Line":1,"Type":"WhileStatement","Condition":"x > y[6]"}]'
         );
     });
-    it('is handling while loop correctly', () => {
+    it('is handling for loop correctly', () => {
         assert.equal(
             JSON.stringify(forHandler(for1)),
-            '{"Line":1,"Type":"ForStatement","Condition":"i <= 5"}'
+            '[{"Line":1,"Type":"ForStatement","Condition":"i <= 5"},{"Line":1,"Type":"AssignmentExpression","Name":"i","Value":"0"}]'
         );
     });
     it('is call type function correctly', () => {
