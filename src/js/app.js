@@ -1,10 +1,12 @@
 import $ from 'jquery';
-import {parseCode} from './code-analyzer';
+import {parseCode, recursiveHandle, htmlBuild} from './code-analyzer';
 
 $(document).ready(function () {
     $('#codeSubmissionButton').click(() => {
         let codeToParse = $('#codePlaceholder').val();
         let parsedCode = parseCode(codeToParse);
-        $('#parsedCode').val(JSON.stringify(parsedCode, null, 2));
+        let parsedString = recursiveHandle(parsedCode);
+        parsedString = htmlBuild(parsedString);
+        $('#parsedCode').html(parsedString);
     });
 });
