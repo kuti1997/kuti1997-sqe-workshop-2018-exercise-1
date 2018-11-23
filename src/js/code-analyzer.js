@@ -17,20 +17,22 @@ const declarationHandler = (code) =>{
 };
 
 const assHandler = (code) =>{
-    let value = null;
-    if(code['right'] !== null)
+    let value =  escodegen.generate(code['right']);
+    let left =escodegen.generate(code['left']);
+    if(code['operator'] !== '=')
     {
-        value =  escodegen.generate(code['right']);
+        value = left + ' ' + code['operator'].substring(0,code['operator'].length-1) + ' ' + value;
     }
-    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Name' : code['left']['name'], 'Value': value}];
+    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Name' : left, 'Value': value}];
+};
+
+const updateHandler = (code) =>{
+    let value = code['argument']['name'] + ' ' + code['operator'].substring(1) + ' 1';
+    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Name' : code['argument']['name'], 'Value': value}];
 };
 
 const ifHandler = (code) =>{
-    let cond = null;
-    if(code['test'] !== null)
-    {
-        cond = escodegen.generate(code['test']);
-    }
+    let cond  = escodegen.generate(code['test']);
     return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond}].concat(recursiveHandle(code['consequent']))
         .concat(recursiveHandle(code['alternate']));
 };
@@ -55,11 +57,7 @@ const returnHandler = (code) =>{
 };
 
 const whileHandler = (code) =>{
-    let cond = null;
-    if(code['test'] !== null)
-    {
-        cond = escodegen.generate(code['test']);
-    }
+    let cond  = escodegen.generate(code['test']);
     return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond}].concat(recursiveHandle(code['body']));
 };
 
@@ -72,19 +70,19 @@ const forHandler = (code) =>{
     }
     if(code['init'] !== null)
     {
-        toReturn = toReturn.concat(callTypeFunction(code['init']));
+        toReturn = toReturn.concat(recursiveHandle(code['init']));
     }
     if(code['update'] !== null)
     {
-        toReturn = toReturn.concat(callTypeFunction(code['update']));
+        toReturn = toReturn.concat(recursiveHandle(code['update']));
     }
-    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond}].concat(toReturn).concat(recursiveHandle(code['consequent']));
+    return [{'Line': code['loc']['start']['line'], 'Type': code['type'], 'Condition' : cond}].concat(toReturn).concat(recursiveHandle(code['body']));
 };
 //End of Type Handlers
 
 const TypeToHandler = {'IfStatement': ifHandler, 'FunctionDeclaration': funDecHandler, 'Identifier': varHandler,
     'VariableDeclarator': declarationHandler, 'AssignmentExpression': assHandler, 'ReturnStatement': returnHandler
-    ,'WhileStatement': whileHandler, 'ForStatement': forHandler
+    ,'WhileStatement': whileHandler, 'ForStatement': forHandler, 'UpdateExpression': updateHandler
 };
 
 
@@ -106,10 +104,7 @@ const handleMap = (code) =>{
     let toReturn = [];
     if(code.hasOwnProperty('type'))
     {
-        if(code['type'] !== 'Identifier')
-        {
-            toReturn = toReturn.concat(callTypeFunction(code));
-        }
+        toReturn = toReturn.concat(callTypeFunction(code));
         if(!TypeToHandler.hasOwnProperty(code['type']))
         {
             for(let x in code)
