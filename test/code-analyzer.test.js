@@ -29,6 +29,12 @@ describe('Identifier Parse', () => {
             '[{"Line":1,"Type":"Identifier","Name":"X"}]'
         );
     });
+    it('is handling identifier should return empty correctly', () => {
+        assert.equal(
+            JSON.stringify(varHandler(identifier1)),
+            '[{"Line":1,"Type":"Identifier","Name":"X"}]'
+        );
+    });
 });
 
 let declaration1 = parseCode('let x = y + 6;')['body'][0]['declarations'][0];
@@ -158,6 +164,7 @@ let recursiveHandler1 = parseCode('function func(a){\n' +
     '}\n' +
     'return 1;\n' +
     '}');
+let recursiveHandler2 = parseCode('demo();');
 describe('recursive handle function', () => {
     it('is recursive handle function correctly', () => {
         assert.equal(
@@ -168,6 +175,12 @@ describe('recursive handle function', () => {
             '{"Line":3,"Type":"IfStatement","Condition":"x > a"},' +
             '{"Line":4,"Type":"ReturnStatement","Value":"0"},' +
             '{"Line":6,"Type":"ReturnStatement","Value":"1"}]'
+        );
+    });
+    it('is recursive handle function should return empty correctly', () => {
+        assert.equal(
+            JSON.stringify(recursiveHandle(recursiveHandler2)),
+            '[]'
         );
     });
 });

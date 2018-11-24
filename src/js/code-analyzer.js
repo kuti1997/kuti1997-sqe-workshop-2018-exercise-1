@@ -104,7 +104,10 @@ const handleMap = (code) =>{
     let toReturn = [];
     if(code.hasOwnProperty('type'))
     {
-        toReturn = toReturn.concat(callTypeFunction(code));
+        if(code['type'] !== 'Identifier')
+        {
+            toReturn = toReturn.concat(callTypeFunction(code));
+        }
         if(!TypeToHandler.hasOwnProperty(code['type']))
         {
             for(let x in code)
